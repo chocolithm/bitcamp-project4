@@ -19,6 +19,12 @@ public class User implements Serializable {
     this.no = no;
   }
 
+  public User(String name) {
+    this.name = name;
+    this.win = 0;
+    this.lose = 0;
+  }
+
   @Override
   public String toString() {
     return "User{" +

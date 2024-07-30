@@ -133,4 +133,14 @@ public class ListUserDao implements UserDao {
     userList.remove(index);
     return true;
   }
+
+  @Override
+  public User findByName(String name) throws Exception {
+    for (User user : userList) {
+      if (user.getName().equals(name)) {
+        return user;
+      }
+    }
+    return null;
+  }
 }

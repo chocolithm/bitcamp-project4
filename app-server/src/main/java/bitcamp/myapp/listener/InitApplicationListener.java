@@ -16,6 +16,7 @@ public class InitApplicationListener implements ApplicationListener {
 
     UserDaoSkel userDaoSkel = new UserDaoSkel(userDao);
 
+    ctx.setAttribute("userDao", userDao);
     ctx.setAttribute("userDaoSkel", userDaoSkel);
   }
 

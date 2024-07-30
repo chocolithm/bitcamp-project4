@@ -3,6 +3,7 @@ package bitcamp.myapp;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
 import bitcamp.myapp.listener.InitApplicationListener;
+import bitcamp.myapp.vo.User;
 import bitcamp.util.Prompt;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -35,6 +36,9 @@ public class ClientApp {
   void execute() {
 
     try {
+      System.out.println("Welcome to TicTacToe");
+      String playerName = Prompt.input("플레이어 :");
+
       Socket socket = new Socket("127.0.0.1", 8888);
 
       ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -51,10 +55,24 @@ public class ClientApp {
           System.out.println("리스너 실행 중 오류 발생!");
         }
       }
+      
+//      appCtx.getMainMenu().execute();
 
-      System.out.println("[프로젝트 관리 시스템]");
+      out.writeUTF(playerName);
 
-      appCtx.getMainMenu().execute();
+      // 게임 실행
+      System.out.println("게임 시작!");
+
+      while (true) {
+
+        // 서버로부터 게임판 입력
+        // 선공
+
+        String dataName = in.readUTF();
+        if (dataName.equals("quit")) {
+          break;
+        }
+      }
 
       out.writeUTF("quit");
       out.flush();

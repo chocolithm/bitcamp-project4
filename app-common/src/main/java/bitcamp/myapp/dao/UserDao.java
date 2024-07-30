@@ -14,4 +14,8 @@ public interface UserDao {
   boolean update(User user) throws Exception;
 
   boolean delete(int no) throws Exception;
+
+  default User findByName(String name) throws Exception {
+    return null;
+  };
 }
