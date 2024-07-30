@@ -1,5 +1,6 @@
 package bitcamp.myapp;
 
+import bitcamp.command.PracticeGame;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
 import bitcamp.myapp.listener.InitApplicationListener;
@@ -10,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ClientApp {
 
@@ -59,24 +61,36 @@ public class ClientApp {
 //      appCtx.getMainMenu().execute();
 
       out.writeUTF(playerName);
+      out.flush();
 
       // 게임 실행
       System.out.println("게임 시작!");
+      String map;
 
       while (true) {
 
-        // 서버로부터 게임판 입력
-        // 선공
+        System.out.println(in.readUTF());
+        PracticeGame.gameMap = (Map<Integer, String>) in.readObject();
+        out.writeInt(PracticeGame.move("o"));
+        out.flush();
 
-        String dataName = in.readUTF();
-        if (dataName.equals("quit")) {
+        if(in.readUTF().equals("game over")) {
+          System.out.println(in.readUTF());
+          System.out.println("게임 오버");
           break;
         }
+
+        System.out.println(in.readUTF());
+        PracticeGame.gameMap = (Map<Integer, String>) in.readObject();
+
+        if(in.readUTF().equals("game over")) {
+          System.out.println(in.readUTF());
+          System.out.println("게임 오버");
+          break;
+        }
+
       }
 
-      out.writeUTF("quit");
-      out.flush();
-      
     } catch (Exception ex) {
       System.out.println("실행 오류!");
       ex.printStackTrace();

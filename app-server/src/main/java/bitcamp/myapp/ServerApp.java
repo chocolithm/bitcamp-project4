@@ -1,5 +1,6 @@
 package bitcamp.myapp;
 
+import bitcamp.command.PracticeGame;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
 import bitcamp.myapp.dao.UserDao;
@@ -69,14 +70,16 @@ public class ServerApp {
     }
 
     try (ServerSocket serverSocket = new ServerSocket(8888);) {
+      PracticeGame.start();
       System.out.println("게임 시작 대기 중...");
 
-      try (Socket socket = serverSocket.accept();) {
-        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+      try (Socket socket = serverSocket.accept()) {
         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
         // 클라이언트 플레이어 이름 등록
-        clientPlayer = userDao.findByName(in.readUTF());
+        playerName = in.readUTF();
+        clientPlayer = userDao.findByName(playerName);
         if(clientPlayer == null) {
           clientPlayer = new User(playerName);
           userDao.insert(clientPlayer);
@@ -86,19 +89,41 @@ public class ServerApp {
 
         while (true) {
 
-          // 게임판 출력
-          // 클라이언트에게 게임판 출력
-          // 클라이언트 입력 대기
+          System.out.println(PracticeGame.getMap());
+          out.writeUTF(PracticeGame.getMap());
+          out.writeObject(PracticeGame.gameMap);
+          out.flush();
 
-          // 입력받으면 게임판 리프레시하여 다시 출력
-          // 클라이언트에게 게임판 출력
-          // 
-
-          String move = in.readUTF();
-          if (move.equals("quit")) {
+          int clientMove = in.readInt();
+          PracticeGame.set(clientMove, "o");
+          if(PracticeGame.check()) {
+            out.writeUTF("game over");
+            out.writeUTF(PracticeGame.getMap());
+            out.flush();
+            System.out.println(PracticeGame.getMap());
+            System.out.println("게임 오버");
             break;
           }
+          out.writeUTF("continue");
+          out.flush();
 
+
+          System.out.println(PracticeGame.getMap());
+          out.writeUTF(PracticeGame.getMap());
+          out.writeObject(PracticeGame.gameMap);
+          out.flush();
+
+          PracticeGame.move("x");
+          if(PracticeGame.check()) {
+            out.writeUTF("game over");
+            out.writeUTF(PracticeGame.getMap());
+            out.flush();
+            System.out.println(PracticeGame.getMap());
+            System.out.println("게임 오버");
+            break;
+          }
+          out.writeUTF("continue");
+          out.flush();
         }
       }
 
