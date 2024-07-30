@@ -34,9 +34,8 @@ public class ListUserDao implements UserDao {
           User user = new User();
           user.setNo(Integer.parseInt(row.getCell(0).getStringCellValue()));
           user.setName(row.getCell(1).getStringCellValue());
-          user.setEmail(row.getCell(2).getStringCellValue());
-          user.setPassword(row.getCell(3).getStringCellValue());
-          user.setTel(row.getCell(4).getStringCellValue());
+          user.setWin(Integer.parseInt(row.getCell(2).getStringCellValue()));
+          user.setLose(Integer.parseInt(row.getCell(3).getStringCellValue()));
 
           userList.add(user);
 
@@ -65,7 +64,7 @@ public class ListUserDao implements UserDao {
       XSSFSheet sheet = workbook.createSheet(dataName);
 
       // 셀 이름 출력
-      String[] cellHeaders = {"no", "name", "email", "password", "tel"};
+      String[] cellHeaders = {"no", "name", "win", "lose"};
       Row headerRow = sheet.createRow(0);
       for (int i = 0; i < cellHeaders.length; i++) {
         headerRow.createCell(i).setCellValue(cellHeaders[i]);
@@ -77,9 +76,8 @@ public class ListUserDao implements UserDao {
         Row dataRow = sheet.createRow(rowNo++);
         dataRow.createCell(0).setCellValue(String.valueOf(user.getNo()));
         dataRow.createCell(1).setCellValue(user.getName());
-        dataRow.createCell(2).setCellValue(user.getEmail());
-        dataRow.createCell(3).setCellValue(user.getPassword());
-        dataRow.createCell(4).setCellValue(user.getTel());
+        dataRow.createCell(2).setCellValue(String.valueOf(user.getWin()));
+        dataRow.createCell(3).setCellValue(String.valueOf(user.getLose()));
       }
 
       // 엑셀 파일로 데이터를 출력하기 전에

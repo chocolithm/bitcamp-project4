@@ -19,9 +19,8 @@ public class UserAddCommand implements Command {
     try {
       User user = new User();
       user.setName(Prompt.input("이름?"));
-      user.setEmail(Prompt.input("이메일?"));
-      user.setPassword(Prompt.input("암호?"));
-      user.setTel(Prompt.input("연락처?"));
+      user.setWin(0);
+      user.setLose(0);
 
       userDao.insert(user);
     } catch (Exception e) {

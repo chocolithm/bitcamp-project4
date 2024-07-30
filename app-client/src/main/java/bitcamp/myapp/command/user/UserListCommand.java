@@ -20,7 +20,7 @@ public class UserListCommand implements Command {
       System.out.println("번호 이름 이메일");
 
       for (User user : userDao.list()) {
-        System.out.printf("%d %s %s\n", user.getNo(), user.getName(), user.getEmail());
+//        System.out.printf("%d %s %s\n", user.getNo(), user.getName(), user.getEmail());
       }
 
     } catch (Exception e) {
