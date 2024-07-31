@@ -1,6 +1,5 @@
 package bitcamp.myapp;
 
-import bitcamp.command.PracticeGame;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
 import bitcamp.myapp.listener.InitApplicationListener;
@@ -11,7 +10,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 public class ClientApp {
 
@@ -48,7 +47,6 @@ public class ClientApp {
 
       appCtx.setAttribute("inputStream", in);
       appCtx.setAttribute("outputStream", out);
-      appCtx.setAttribute("clientPlayer", playerName);
 
       // 애플리케이션이 시작될 때 리스너에게 알린다.
       for (ApplicationListener listener : listeners) {
@@ -65,35 +63,59 @@ public class ClientApp {
       out.flush();
 
       // 게임 실행
-      System.out.println("게임 시작!");
-      Thread.sleep(1000);
 
-      while (true) {
 
-        System.out.println(in.readUTF());
-        PracticeGame.gameMap = (Map<Integer, String>) in.readObject();
-        out.writeInt(PracticeGame.move("o"));
-        out.flush();
+        System.out.println("게임 시작!");
+        Thread.sleep(1000);
 
-        if(in.readUTF().equals("game over")) {
+        int turn = 1;
+        String message;
+        while (true) {
+
           System.out.println(in.readUTF());
-          System.out.printf("승자 : %s\n", in.readUTF());
-          System.out.println("게임 오버");
-          break;
+
+          if (turn == 1) {
+            turn = 2;
+
+            while (true) {
+              try {
+                out.writeInt(Prompt.inputInt("다음 수를 입력하세요(1~9) :"));
+                out.flush();
+                message = in.readUTF();
+
+                if (message.equals("OK")) {
+                  break;
+                } else {
+                  System.out.println(message);
+                }
+
+              } catch (Exception e) {
+                System.out.println("오류 발생!");
+              }
+            }
+
+          } else {
+            turn = 1;
+            System.out.println("상대방 입력 대기 중...");
+          }
+
+          if (in.readUTF().equals("game over")) {
+            break;
+          }
         }
 
+
         System.out.println(in.readUTF());
-        System.out.println("상대방 입력 대기 중...");
-        PracticeGame.gameMap = (Map<Integer, String>) in.readObject();
-
-        if(in.readUTF().equals("game over")) {
-          System.out.println(in.readUTF());
-          System.out.printf("승자 : %s\n", in.readUTF());
-          System.out.println("게임 오버");
-          break;
+        String player = in.readUTF();
+        if (Objects.equals(player, "draw")) {
+          System.out.println("무승부입니다.");
+        } else {
+          System.out.printf("승자 : %s\n", player);
         }
-
-      }
+        User clientPlayer = (User) in.readObject();
+        System.out.printf("내 전적 : %d승 %d무 %d패\n", clientPlayer.getWin(), clientPlayer.getDraw(),
+            clientPlayer.getLose());
+        System.out.println("게임 오버");
 
 
 

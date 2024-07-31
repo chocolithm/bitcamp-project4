@@ -1,6 +1,6 @@
 package bitcamp.myapp;
 
-import bitcamp.command.PracticeGame;
+import bitcamp.myapp.command.GameCommand;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
 import bitcamp.myapp.dao.HistoryDao;
@@ -11,7 +11,6 @@ import bitcamp.myapp.listener.InitApplicationListener;
 import bitcamp.myapp.vo.User;
 import bitcamp.util.Prompt;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -75,19 +74,23 @@ public class ServerApp {
       System.out.println("플레이어 등록 중 오류 발생!");
     }
 
+
     try (ServerSocket serverSocket = new ServerSocket(8888);) {
-      PracticeGame.start();
-      System.out.println("게임 시작 대기 중...");
 
-      System.out.println("클라이언트의 연결을 기다림!");
-      Socket socket = serverSocket.accept();
-      InetSocketAddress remoteAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
-      System.out.printf("클라이언트(%s:%d)가 연결되었음!\n", //
-          remoteAddr.getAddress(), remoteAddr.getPort());
+        GameCommand.start();
+        System.out.println("게임 시작 대기 중...");
 
-      RequestHandler requestHandler = new RequestHandler(socket, userDao, historyDao, appCtx);
-      requestHandler.start();
-      requestHandler.join();
+        System.out.println("클라이언트의 연결을 기다림!");
+        Socket socket = serverSocket.accept();
+        InetSocketAddress remoteAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
+        System.out.printf("클라이언트(%s:%d)가 연결되었음!\n", //
+            remoteAddr.getAddress(), remoteAddr.getPort());
+
+        RequestHandler requestHandler = new RequestHandler(socket, userDao, historyDao, appCtx);
+        requestHandler.start();
+        requestHandler.join();
+
+
 
     } catch (Exception e) {
       System.out.println("통신 중 오류 발생!");

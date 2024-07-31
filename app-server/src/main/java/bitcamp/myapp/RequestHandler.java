@@ -1,23 +1,33 @@
 package bitcamp.myapp;
 
-import bitcamp.command.PracticeGame;
+import bitcamp.myapp.command.GameCommand;
 import bitcamp.context.ApplicationContext;
 import bitcamp.myapp.dao.HistoryDao;
 import bitcamp.myapp.dao.UserDao;
+import bitcamp.myapp.dao.skel.HistoryDaoSkel;
 import bitcamp.myapp.vo.History;
 import bitcamp.myapp.vo.User;
 
+import bitcamp.net.ResponseStatus;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.List;
 import java.util.Objects;
+
+import static bitcamp.net.ResponseStatus.SUCCESS;
 
 public class RequestHandler extends Thread {
 
   private Socket socket;
   private UserDao userDao;
   private HistoryDao historyDao;
+  private HistoryDaoSkel historyDaoSkel;
   private ApplicationContext ctx;
+  private String serverPlayerName;
+  private String clientPlayerName;
+  private User serverPlayer;
+  private User clientPlayer;
 
   public RequestHandler(Socket socket, UserDao userDao, HistoryDao historyDao, ApplicationContext ctx) {
     this.socket = socket;
@@ -28,72 +38,100 @@ public class RequestHandler extends Thread {
 
   @Override
   public void run() {
-    try (Socket socket2 = socket) {
-      ObjectOutputStream out = new ObjectOutputStream(socket2.getOutputStream());
-      ObjectInputStream in = new ObjectInputStream(socket2.getInputStream());
+    try {
+      ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+      ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-      // 클라이언트 플레이어 이름 등록
-      String serverPlayerName = (String) ctx.getAttribute("serverPlayer");
-      String clientPlayerName = in.readUTF();
-      User serverPlayer = userDao.findByName(serverPlayerName);
-      User clientPlayer = userDao.findByName(clientPlayerName);
+      historyDaoSkel = (HistoryDaoSkel) ctx.getAttribute("historyDaoSkel");
+      serverPlayerName = (String) ctx.getAttribute("serverPlayer");
+      clientPlayerName = in.readUTF();
+      serverPlayer = userDao.findByName(serverPlayerName);
+      clientPlayer = userDao.findByName(clientPlayerName);
+
       if(clientPlayer == null) {
         clientPlayer = new User(clientPlayerName);
         userDao.insert(clientPlayer);
       }
 
+      ctx.setAttribute("out", out);
+      ctx.setAttribute("in", in);
+      ctx.setAttribute("clientPlayer", clientPlayer);
+
       System.out.println("게임 시작!");
       Thread.sleep(1000);
 
       String player;
+      String message;
+      int clientMove;
+      int turn = 1;
       while (true) {
 
-        System.out.println(PracticeGame.getMap());
-        System.out.println("상대방 입력 대기 중...");
-        out.writeUTF(PracticeGame.getMap());
-        out.writeObject(PracticeGame.gameMap);
+        System.out.println(GameCommand.getMap());
+        out.writeUTF(GameCommand.getMap());
         out.flush();
 
-        int clientMove = in.readInt();
-        PracticeGame.set(clientMove, "o");
-        player = PracticeGame.check(clientPlayerName);
-        if(Objects.equals(player, clientPlayerName)) {
-          setWinLose(clientPlayerName, serverPlayerName);
+        if (turn == 1) {
+          turn = 2;
+
+          System.out.println("상대방 입력 대기 중...");
+
+          while (true) {
+            clientMove = in.readInt();
+            message = GameCommand.validate(clientMove);
+            if(message.equals("OK")) {
+              out.writeUTF(message);
+              out.flush();
+              GameCommand.set(clientMove);
+              break;
+            } else {
+              out.writeUTF(message);
+              out.flush();
+            }
+          }
+
+          player = GameCommand.check(clientPlayerName);
+          if(Objects.equals(player, clientPlayerName)) {
+            setWinLose(clientPlayerName, serverPlayerName);
+            break;
+          }
+
+        } else {
+          turn = 1;
+
+          GameCommand.move("x");
+          player = GameCommand.check(serverPlayerName);
+          if(Objects.equals(player, serverPlayerName)) {
+            setWinLose(serverPlayerName, clientPlayerName);
+            break;
+          }
+        }
+
+        if (Objects.equals(player, "draw")) {
+          setDraw();
           break;
         }
-        out.writeUTF("continue");
-        out.flush();
 
-
-        System.out.println(PracticeGame.getMap());
-        out.writeUTF(PracticeGame.getMap());
-        out.writeObject(PracticeGame.gameMap);
-        out.flush();
-
-        PracticeGame.move("x");
-        player = PracticeGame.check(serverPlayerName);
-        if(Objects.equals(player, serverPlayerName)) {
-          setWinLose(serverPlayerName, clientPlayerName);
-          break;
-        }
         out.writeUTF("continue");
         out.flush();
       }
 
       out.writeUTF("game over");
-      out.writeUTF(PracticeGame.getMap());
+      out.writeUTF(GameCommand.getMap());
       out.writeUTF(player);
+      out.writeObject(clientPlayer);
       out.flush();
-      System.out.println(PracticeGame.getMap());
-      System.out.printf("승자 : %s\n", player);
+      System.out.println(GameCommand.getMap());
+      if(Objects.equals(player, "draw")) {
+        System.out.println("무승부입니다.");
+      } else {
+        System.out.printf("승자 : %s\n", player);
+      }
+      System.out.printf("내 전적 : %d승 %d무 %d패\n", serverPlayer.getWin(), serverPlayer.getDraw(), serverPlayer.getLose());
       System.out.println("게임 오버");
-
 
     } catch (Exception e) {
       System.out.println("클라이언트 요청 처리 중 오류 발생!");
 
-    } finally {
-      System.out.println("클라이언트 연결 종료!");
     }
   }
 
@@ -110,6 +148,21 @@ public class RequestHandler extends Thread {
       history.setWinner(winnerName);
       historyDao.insert(history);
 
+    } catch (Exception e) {
+      System.out.println("전적 처리 중 오류 발생");
+      e.printStackTrace();
+    }
+  }
+
+  private void setDraw() {
+    try {
+      serverPlayer.setDraw(serverPlayer.getDraw() + 1);
+      clientPlayer.setDraw(clientPlayer.getDraw() + 1);
+
+      History history = new History();
+      history.setPlayers(new String[] {serverPlayerName, clientPlayerName});
+      history.setWinner("draw");
+      historyDao.insert(history);
     } catch (Exception e) {
       System.out.println("전적 처리 중 오류 발생");
       e.printStackTrace();

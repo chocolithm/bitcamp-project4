@@ -18,7 +18,6 @@ public class HistoryListCommand implements Command {
 
   @Override
   public void execute(String menuName) {
-    System.out.printf("[%s]\n", menuName);
 
     try {
       if (historyDao.list(playerName).isEmpty()) {
@@ -38,6 +37,7 @@ public class HistoryListCommand implements Command {
 
     } catch (Exception e) {
       System.out.println("전적 목록 조회 중 오류 발생!");
+      e.printStackTrace();
     }
   }
 }

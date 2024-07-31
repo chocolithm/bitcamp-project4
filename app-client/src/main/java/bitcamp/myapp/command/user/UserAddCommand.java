@@ -20,6 +20,7 @@ public class UserAddCommand implements Command {
       User user = new User();
       user.setName(Prompt.input("이름?"));
       user.setWin(0);
+      user.setDraw(0);
       user.setLose(0);
 
       userDao.insert(user);

@@ -10,6 +10,7 @@ public class User implements Serializable {
   private int no;
   private String name;
   private int win;
+  private int draw;
   private int lose;
 
   public User() {
@@ -22,6 +23,7 @@ public class User implements Serializable {
   public User(String name) {
     this.name = name;
     this.win = 0;
+    this.draw = 0;
     this.lose = 0;
   }
 
@@ -31,6 +33,7 @@ public class User implements Serializable {
         "no=" + no +
         ", name='" + name + '\'' +
         ", win=" + win +
+        ", draw=" + draw +
         ", lose=" + lose +
         '}';
   }
@@ -74,6 +77,14 @@ public class User implements Serializable {
 
   public void setWin(int win) {
     this.win = win;
+  }
+
+  public int getDraw() {
+    return draw;
+  }
+
+  public void setDraw(int draw) {
+    this.draw = draw;
   }
 
   public int getLose() {

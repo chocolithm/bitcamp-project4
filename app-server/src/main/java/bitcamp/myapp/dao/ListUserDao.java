@@ -35,7 +35,8 @@ public class ListUserDao implements UserDao {
           user.setNo(Integer.parseInt(row.getCell(0).getStringCellValue()));
           user.setName(row.getCell(1).getStringCellValue());
           user.setWin(Integer.parseInt(row.getCell(2).getStringCellValue()));
-          user.setLose(Integer.parseInt(row.getCell(3).getStringCellValue()));
+          user.setDraw(Integer.parseInt(row.getCell(3).getStringCellValue()));
+          user.setLose(Integer.parseInt(row.getCell(4).getStringCellValue()));
 
           userList.add(user);
 
@@ -63,7 +64,7 @@ public class ListUserDao implements UserDao {
 
       XSSFSheet sheet = workbook.createSheet(dataName);
 
-      String[] cellHeaders = {"no", "name", "win", "lose"};
+      String[] cellHeaders = {"no", "name", "win", "draw", "lose"};
       Row headerRow = sheet.createRow(0);
       for (int i = 0; i < cellHeaders.length; i++) {
         headerRow.createCell(i).setCellValue(cellHeaders[i]);
@@ -75,7 +76,8 @@ public class ListUserDao implements UserDao {
         dataRow.createCell(0).setCellValue(String.valueOf(user.getNo()));
         dataRow.createCell(1).setCellValue(user.getName());
         dataRow.createCell(2).setCellValue(String.valueOf(user.getWin()));
-        dataRow.createCell(3).setCellValue(String.valueOf(user.getLose()));
+        dataRow.createCell(3).setCellValue(String.valueOf(user.getDraw()));
+        dataRow.createCell(4).setCellValue(String.valueOf(user.getLose()));
       }
 
       in.close();
