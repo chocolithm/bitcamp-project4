@@ -3,6 +3,8 @@ package bitcamp.util;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Prompt {
 
@@ -37,6 +39,19 @@ public class Prompt {
       System.out.println(log);
     }
     System.out.println("------------------------ 끝");
+  }
+
+  public static String getSpaces(int length, String str) {
+    int count = 0;
+    count += str.length();
+
+    Pattern pattern = Pattern.compile("[가-힣]");
+    Matcher matcher = pattern.matcher(str);
+    while (matcher.find()) {
+      count++;
+    }
+
+    return " ".repeat(length - count);
   }
 
   public static void printLogo() {

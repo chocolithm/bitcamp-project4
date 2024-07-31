@@ -63,14 +63,12 @@ public class ListUserDao implements UserDao {
 
       XSSFSheet sheet = workbook.createSheet(dataName);
 
-      // 셀 이름 출력
       String[] cellHeaders = {"no", "name", "win", "lose"};
       Row headerRow = sheet.createRow(0);
       for (int i = 0; i < cellHeaders.length; i++) {
         headerRow.createCell(i).setCellValue(cellHeaders[i]);
       }
 
-      // 데이터 저장
       int rowNo = 1;
       for (User user : userList) {
         Row dataRow = sheet.createRow(rowNo++);
@@ -80,8 +78,6 @@ public class ListUserDao implements UserDao {
         dataRow.createCell(3).setCellValue(String.valueOf(user.getLose()));
       }
 
-      // 엑셀 파일로 데이터를 출력하기 전에
-      // workbook을 위해 연결한 입력 스트림을 먼저 종료한다.
       in.close();
 
       try (FileOutputStream out = new FileOutputStream(path)) {

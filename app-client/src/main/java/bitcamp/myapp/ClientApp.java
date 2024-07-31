@@ -48,6 +48,7 @@ public class ClientApp {
 
       appCtx.setAttribute("inputStream", in);
       appCtx.setAttribute("outputStream", out);
+      appCtx.setAttribute("playerName", playerName);
 
       // 애플리케이션이 시작될 때 리스너에게 알린다.
       for (ApplicationListener listener : listeners) {

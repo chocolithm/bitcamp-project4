@@ -87,17 +87,17 @@ public class ServerApp {
     } catch (Exception e) {
       System.out.println("통신 중 오류 발생!");
       e.printStackTrace();
+    } finally {
+      for (ApplicationListener listener : listeners) {
+        try {
+          listener.onShutdown(appCtx);
+        } catch (Exception e) {
+          System.out.println("리스너 실행 중 오류 발생!");
+        }
+      }
     }
 
     System.out.println("종료합니다.");
 
-    // 애플리케이션이 종료될 때 리스너에게 알린다.
-    for (ApplicationListener listener : listeners) {
-      try {
-        listener.onShutdown(appCtx);
-      } catch (Exception e) {
-        System.out.println("리스너 실행 중 오류 발생!");
-      }
-    }
   }
 }
