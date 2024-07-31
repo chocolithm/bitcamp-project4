@@ -10,6 +10,7 @@ import bitcamp.myapp.vo.User;
 import bitcamp.util.Prompt;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -73,60 +74,16 @@ public class ServerApp {
       PracticeGame.start();
       System.out.println("게임 시작 대기 중...");
 
-      try (Socket socket = serverSocket.accept()) {
-        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+      while (true) {
+        System.out.println("클라이언트의 연결을 기다림!");
+        Socket socket = serverSocket.accept();
+        InetSocketAddress remoteAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
+        System.out.printf("클라이언트(%s:%d)가 연결되었음!\n", //
+            remoteAddr.getAddress(), remoteAddr.getPort());
 
-        // 클라이언트 플레이어 이름 등록
-        playerName = in.readUTF();
-        clientPlayer = userDao.findByName(playerName);
-        if(clientPlayer == null) {
-          clientPlayer = new User(playerName);
-          userDao.insert(clientPlayer);
-        }
-
-        System.out.println("게임 시작!");
-
-        while (true) {
-
-          System.out.println(PracticeGame.getMap());
-          out.writeUTF(PracticeGame.getMap());
-          out.writeObject(PracticeGame.gameMap);
-          out.flush();
-
-          int clientMove = in.readInt();
-          PracticeGame.set(clientMove, "o");
-          if(PracticeGame.check()) {
-            out.writeUTF("game over");
-            out.writeUTF(PracticeGame.getMap());
-            out.flush();
-            System.out.println(PracticeGame.getMap());
-            System.out.println("게임 오버");
-            break;
-          }
-          out.writeUTF("continue");
-          out.flush();
-
-
-          System.out.println(PracticeGame.getMap());
-          out.writeUTF(PracticeGame.getMap());
-          out.writeObject(PracticeGame.gameMap);
-          out.flush();
-
-          PracticeGame.move("x");
-          if(PracticeGame.check()) {
-            out.writeUTF("game over");
-            out.writeUTF(PracticeGame.getMap());
-            out.flush();
-            System.out.println(PracticeGame.getMap());
-            System.out.println("게임 오버");
-            break;
-          }
-          out.writeUTF("continue");
-          out.flush();
-        }
+        RequestHandler requestHandler = new RequestHandler(socket, userDao);
+        requestHandler.start();
       }
-
     } catch (Exception e) {
       System.out.println("통신 중 오류 발생!");
       e.printStackTrace();
