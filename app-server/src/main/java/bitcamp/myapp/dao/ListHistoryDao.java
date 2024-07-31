@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -94,6 +95,7 @@ public class ListHistoryDao implements HistoryDao {
   @Override
   public boolean insert(History history) throws Exception {
     history.setNo(++seqNo);
+    history.setDate(new Date());
     historyList.add(history);
     return true;
   }

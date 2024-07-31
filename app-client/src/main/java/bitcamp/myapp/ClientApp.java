@@ -48,7 +48,7 @@ public class ClientApp {
 
       appCtx.setAttribute("inputStream", in);
       appCtx.setAttribute("outputStream", out);
-      appCtx.setAttribute("playerName", playerName);
+      appCtx.setAttribute("clientPlayer", playerName);
 
       // 애플리케이션이 시작될 때 리스너에게 알린다.
       for (ApplicationListener listener : listeners) {
@@ -66,7 +66,7 @@ public class ClientApp {
 
       // 게임 실행
       System.out.println("게임 시작!");
-      String map;
+      Thread.sleep(1000);
 
       while (true) {
 
@@ -77,20 +77,25 @@ public class ClientApp {
 
         if(in.readUTF().equals("game over")) {
           System.out.println(in.readUTF());
+          System.out.printf("승자 : %s\n", in.readUTF());
           System.out.println("게임 오버");
           break;
         }
 
         System.out.println(in.readUTF());
+        System.out.println("상대방 입력 대기 중...");
         PracticeGame.gameMap = (Map<Integer, String>) in.readObject();
 
         if(in.readUTF().equals("game over")) {
           System.out.println(in.readUTF());
+          System.out.printf("승자 : %s\n", in.readUTF());
           System.out.println("게임 오버");
           break;
         }
 
       }
+
+
 
     } catch (Exception ex) {
       System.out.println("실행 오류!");

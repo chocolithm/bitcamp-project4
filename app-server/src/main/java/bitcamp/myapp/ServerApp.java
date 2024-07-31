@@ -3,7 +3,9 @@ package bitcamp.myapp;
 import bitcamp.command.PracticeGame;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
+import bitcamp.myapp.dao.HistoryDao;
 import bitcamp.myapp.dao.UserDao;
+import bitcamp.myapp.dao.skel.HistoryDaoSkel;
 import bitcamp.myapp.dao.skel.UserDaoSkel;
 import bitcamp.myapp.listener.InitApplicationListener;
 import bitcamp.myapp.vo.User;
@@ -24,7 +26,6 @@ public class ServerApp {
   public static void main(String[] args) {
     ServerApp app = new ServerApp();
 
-    // 애플리케이션이 시작되거나 종료될 때 알림 받을 객체의 연락처를 등록한다.
     app.addApplicationListener(new InitApplicationListener());
 
     app.execute();
@@ -52,11 +53,12 @@ public class ServerApp {
     // 서버에서 사용할 Dao Skeloton 객체를 준비한다.
     UserDaoSkel userDaoSkel = (UserDaoSkel) appCtx.getAttribute("userDaoSkel");
     UserDao userDao = (UserDao) appCtx.getAttribute("userDao");
+    HistoryDaoSkel historyDaoSkel = (HistoryDaoSkel) appCtx.getAttribute("historyDaoSkel");
+    HistoryDao historyDao = (HistoryDao) appCtx.getAttribute("historyDao");
 
     System.out.println("Welcome to TicTacToe");
     String playerName = Prompt.input("플레이어 :");
     User serverPlayer;
-    User clientPlayer;
 
     // 서버 플레이어 이름 등록
     try {
@@ -66,6 +68,9 @@ public class ServerApp {
         serverPlayer = new User(playerName);
         userDao.insert(serverPlayer);
       }
+
+      appCtx.setAttribute("serverPlayer", playerName);
+
     } catch (Exception e) {
       System.out.println("플레이어 등록 중 오류 발생!");
     }
@@ -74,30 +79,29 @@ public class ServerApp {
       PracticeGame.start();
       System.out.println("게임 시작 대기 중...");
 
-      while (true) {
-        System.out.println("클라이언트의 연결을 기다림!");
-        Socket socket = serverSocket.accept();
-        InetSocketAddress remoteAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
-        System.out.printf("클라이언트(%s:%d)가 연결되었음!\n", //
-            remoteAddr.getAddress(), remoteAddr.getPort());
+      System.out.println("클라이언트의 연결을 기다림!");
+      Socket socket = serverSocket.accept();
+      InetSocketAddress remoteAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
+      System.out.printf("클라이언트(%s:%d)가 연결되었음!\n", //
+          remoteAddr.getAddress(), remoteAddr.getPort());
 
-        RequestHandler requestHandler = new RequestHandler(socket, userDao);
-        requestHandler.start();
-      }
+      RequestHandler requestHandler = new RequestHandler(socket, userDao, historyDao, appCtx);
+      requestHandler.start();
+      requestHandler.join();
+
     } catch (Exception e) {
       System.out.println("통신 중 오류 발생!");
       e.printStackTrace();
-    } finally {
-      for (ApplicationListener listener : listeners) {
-        try {
-          listener.onShutdown(appCtx);
-        } catch (Exception e) {
-          System.out.println("리스너 실행 중 오류 발생!");
-        }
-      }
     }
 
     System.out.println("종료합니다.");
 
+    for (ApplicationListener listener : listeners) {
+      try {
+        listener.onShutdown(appCtx);
+      } catch (Exception e) {
+        System.out.println("리스너 실행 중 오류 발생!");
+      }
+    }
   }
 }
