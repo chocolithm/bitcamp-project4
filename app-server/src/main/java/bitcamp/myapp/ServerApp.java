@@ -89,7 +89,7 @@ public class ServerApp {
       System.out.println("플레이어 등록 중 오류 발생!");
     }
 
-    try (ServerSocket serverSocket = new ServerSocket(8888);) {
+    try (ServerSocket serverSocket = new ServerSocket(8888)) {
       GameCommand.start();
       System.out.println("게임 시작 대기 중...");
 
@@ -122,6 +122,8 @@ public class ServerApp {
         String command = in.readUTF();
         if (command.equals("0")) {
           try {
+            out.close();
+            in.close();
             socket.close();
           } catch (Exception ignored) {
 
@@ -130,6 +132,7 @@ public class ServerApp {
         }
 
         if (command.equals("1")) {
+          out.reset();
           GameCommand.start();
           turn = CLIENT_TURN;
           continue;

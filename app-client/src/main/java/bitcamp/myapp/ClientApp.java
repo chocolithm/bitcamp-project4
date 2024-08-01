@@ -105,10 +105,14 @@ public class ClientApp {
         out.writeUTF(command);
         out.flush();
         if (command.equals("0")) {
+          out.close();
+          in.close();
+          socket.close();
           break;
         }
 
         if (command.equals("1")) {
+          out.reset();
           turn = CLIENT_TURN;
           System.out.println("게임을 다시 시작합니다.");
           continue;
@@ -172,11 +176,13 @@ public class ClientApp {
     printMap();
     String result = in.readUTF();
     String winner = in.readUTF();
+
     if (Objects.equals(result, "draw")) {
       System.out.println("무승부입니다.");
     } else {
       System.out.printf("승자 : %s\n", winner);
     }
+
     User clientPlayer = (User) in.readObject();
     System.out.printf("내 전적 : %d승 %d무 %d패\n", clientPlayer.getWin(), clientPlayer.getDraw(),
         clientPlayer.getLose());
@@ -198,6 +204,11 @@ public class ClientApp {
       } else {
         result = Ansi.RED + "패" + Ansi.RESET;
       }
+
+      if(history.getWinner().equals("draw")) {
+        result = "무";
+      }
+
       System.out.printf("%s\t%s%s%s%s%s\n",
           new SimpleDateFormat("yyyy-MM-dd").format(history.getDate()),
           history.getPlayers()[0], Prompt.getSpaces(12, history.getPlayers()[0]),
