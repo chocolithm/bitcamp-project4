@@ -63,7 +63,7 @@ public class ClientApp {
       out.flush();
 
       // 게임 실행
-
+      while (true) {
 
         System.out.println("게임 시작!");
         Thread.sleep(1000);
@@ -118,6 +118,24 @@ public class ClientApp {
         System.out.println("게임 오버");
 
 
+        System.out.println("[0] 종료  [1] 다시하기  [2] 전적보기");
+        String command = Prompt.input("선택>");
+        out.writeUTF(command);
+        out.flush();
+        if (command.equals("0")) {
+          break;
+        }
+
+        if (command.equals("1")) {
+          System.out.println("게임을 다시 시작합니다.");
+          continue;
+        }
+
+        if (command.equals("2")) {
+          System.out.println("준비중");
+          break;
+        }
+      }
 
     } catch (Exception ex) {
       System.out.println("실행 오류!");

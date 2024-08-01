@@ -1,9 +1,13 @@
 package bitcamp.myapp.vo;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class History {
+public class History implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
   int no;
   String[] players;
   String winner;

@@ -17,9 +17,10 @@ import java.util.Objects;
 
 import static bitcamp.net.ResponseStatus.SUCCESS;
 
-public class RequestHandler extends Thread {
+public class RequestHandler implements Runnable {
 
-  private Socket socket;
+  private ObjectOutputStream out;
+  private ObjectInputStream in;
   private UserDao userDao;
   private HistoryDao historyDao;
   private HistoryDaoSkel historyDaoSkel;
@@ -29,8 +30,7 @@ public class RequestHandler extends Thread {
   private User serverPlayer;
   private User clientPlayer;
 
-  public RequestHandler(Socket socket, UserDao userDao, HistoryDao historyDao, ApplicationContext ctx) {
-    this.socket = socket;
+  public RequestHandler(UserDao userDao, HistoryDao historyDao, ApplicationContext ctx) {
     this.userDao = userDao;
     this.historyDao = historyDao;
     this.ctx = ctx;
@@ -39,12 +39,10 @@ public class RequestHandler extends Thread {
   @Override
   public void run() {
     try {
-      ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-      ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
       historyDaoSkel = (HistoryDaoSkel) ctx.getAttribute("historyDaoSkel");
       serverPlayerName = (String) ctx.getAttribute("serverPlayer");
-      clientPlayerName = in.readUTF();
+      clientPlayerName = (String) ctx.getAttribute("clientPlayer");
       serverPlayer = userDao.findByName(serverPlayerName);
       clientPlayer = userDao.findByName(clientPlayerName);
 
@@ -53,9 +51,8 @@ public class RequestHandler extends Thread {
         userDao.insert(clientPlayer);
       }
 
-      ctx.setAttribute("out", out);
-      ctx.setAttribute("in", in);
-      ctx.setAttribute("clientPlayer", clientPlayer);
+      out = (ObjectOutputStream) ctx.getAttribute("out");
+      in = (ObjectInputStream) ctx.getAttribute("in");
 
       System.out.println("게임 시작!");
       Thread.sleep(1000);
@@ -131,7 +128,7 @@ public class RequestHandler extends Thread {
 
     } catch (Exception e) {
       System.out.println("클라이언트 요청 처리 중 오류 발생!");
-
+      e.printStackTrace();
     }
   }
 

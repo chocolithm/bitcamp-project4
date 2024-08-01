@@ -11,6 +11,7 @@ import bitcamp.myapp.listener.InitApplicationListener;
 import bitcamp.myapp.vo.User;
 import bitcamp.util.Prompt;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -76,21 +77,47 @@ public class ServerApp {
 
 
     try (ServerSocket serverSocket = new ServerSocket(8888);) {
+      GameCommand.start();
+      System.out.println("게임 시작 대기 중...");
 
-        GameCommand.start();
-        System.out.println("게임 시작 대기 중...");
+      System.out.println("클라이언트의 연결을 기다림!");
+      Socket socket = serverSocket.accept();
+      ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+      ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+      InetSocketAddress remoteAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
+      System.out.printf("클라이언트(%s:%d)가 연결되었음!\n", remoteAddr.getAddress(), remoteAddr.getPort());
 
-        System.out.println("클라이언트의 연결을 기다림!");
-        Socket socket = serverSocket.accept();
-        InetSocketAddress remoteAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
-        System.out.printf("클라이언트(%s:%d)가 연결되었음!\n", //
-            remoteAddr.getAddress(), remoteAddr.getPort());
+      String clientPlayerName = in.readUTF();
+      appCtx.setAttribute("out", out);
+      appCtx.setAttribute("in", in);
+      appCtx.setAttribute("clientPlayer", clientPlayerName);
 
-        RequestHandler requestHandler = new RequestHandler(socket, userDao, historyDao, appCtx);
-        requestHandler.start();
-        requestHandler.join();
+      Thread requestThread;
+      while (true) {
+        requestThread = new Thread(new RequestHandler(userDao, historyDao, appCtx));
+        requestThread.start();
+        requestThread.join();
 
+        String command = in.readUTF();
+        if (command.equals("0")) {
+          try {
+            socket.close();
+          } catch (Exception ignored) {
 
+          }
+          break;
+        }
+
+        if (command.equals("1")) {
+          GameCommand.start();
+          continue;
+        }
+
+        if (command.equals("2")) {
+          System.out.println("준비중");
+          break;
+        }
+      }
 
     } catch (Exception e) {
       System.out.println("통신 중 오류 발생!");
