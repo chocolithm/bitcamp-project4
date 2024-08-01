@@ -3,11 +3,14 @@ package bitcamp.myapp;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
 import bitcamp.myapp.listener.InitApplicationListener;
+import bitcamp.myapp.vo.History;
 import bitcamp.myapp.vo.User;
+import bitcamp.util.Ansi;
 import bitcamp.util.Prompt;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -132,7 +135,7 @@ public class ClientApp {
         }
 
         if (command.equals("2")) {
-          System.out.println("준비중");
+          printList((List<History>) in.readObject(), playerName);
           break;
         }
       }
@@ -153,6 +156,29 @@ public class ClientApp {
       } catch (Exception e) {
         System.out.println("리스너 실행 중 오류 발생!");
       }
+    }
+  }
+
+  private void printList(List<History> list, String playerName) {
+    if (list.isEmpty()) {
+      System.out.println("전적이 없습니다.");
+      return;
+    }
+
+    System.out.println("날짜\t\t1플레이어\t2플레이어\t승패\t\t");
+
+    String result;
+    for (History history : list) {
+      if(history.getWinner().equals(playerName)) {
+        result = Ansi.BLUE + "승" + Ansi.RESET;
+      } else {
+        result = Ansi.RED + "패" + Ansi.RESET;
+      }
+      System.out.printf("%s\t%s%s%s%s%s\n",
+          new SimpleDateFormat("yyyy-MM-dd").format(history.getDate()),
+          history.getPlayers()[0], Prompt.getSpaces(12, history.getPlayers()[0]),
+          history.getPlayers()[1], Prompt.getSpaces(12, history.getPlayers()[1]),
+          result);
     }
   }
 }
