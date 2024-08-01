@@ -3,6 +3,8 @@ package bitcamp.myapp;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
 import bitcamp.listener.StartApplicationListener;
+import bitcamp.myapp.dao.HistoryDao;
+import bitcamp.myapp.dao.UserDao;
 import bitcamp.myapp.listener.InitApplicationListener;
 import bitcamp.myapp.vo.History;
 import bitcamp.myapp.vo.User;
@@ -22,11 +24,13 @@ import static bitcamp.net.ResponseStatus.SERVER_TURN;
 public class ClientApp {
 
   List<ApplicationListener> listeners = new ArrayList<>();
-  ApplicationContext appCtx = new ApplicationContext();
+  ApplicationContext ctx = new ApplicationContext();
 
-  ObjectOutputStream out;
-  ObjectInputStream in;
-  int turn = CLIENT_TURN;
+  private ObjectOutputStream out;
+  private ObjectInputStream in;
+  private UserDao userDao;
+  private HistoryDao historyDao;
+  private int turn = CLIENT_TURN;
 
   public static void main(String[] args) {
     ClientApp app = new ClientApp();
@@ -49,21 +53,22 @@ public class ClientApp {
   void execute() {
 
     try {
-      System.out.println("Welcome to TicTacToe");
       String clientPlayerName = Prompt.input("플레이어 :");
 
       Socket socket = new Socket("127.0.0.1", 8888);
 
       out = new ObjectOutputStream(socket.getOutputStream());
       in = new ObjectInputStream(socket.getInputStream());
+      ctx.setAttribute("inputStream", in);
+      ctx.setAttribute("outputStream", out);
 
-      appCtx.setAttribute("inputStream", in);
-      appCtx.setAttribute("outputStream", out);
+      userDao = (UserDao) ctx.getAttribute("userDao");
+      historyDao = (HistoryDao) ctx.getAttribute("historyDao");
 
       // 애플리케이션이 시작될 때 리스너에게 알린다.
       for (ApplicationListener listener : listeners) {
         try {
-          listener.onStart(appCtx);
+          listener.onStart(ctx);
         } catch (Exception e) {
           System.out.println("리스너 실행 중 오류 발생!");
         }
@@ -121,13 +126,12 @@ public class ClientApp {
     }
 
     System.out.println("종료합니다.");
-
     Prompt.close();
 
     // 애플리케이션이 종료될 때 리스너에게 알린다.
     for (ApplicationListener listener : listeners) {
       try {
-        listener.onShutdown(appCtx);
+        listener.onShutdown(ctx);
       } catch (Exception e) {
         System.out.println("리스너 실행 중 오류 발생!");
       }

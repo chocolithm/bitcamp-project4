@@ -73,10 +73,8 @@ public class ServerApp {
     userDao = (UserDao) ctx.getAttribute("userDao");
     historyDao = (HistoryDao) ctx.getAttribute("historyDao");
 
-
     // 서버 플레이어 이름 등록
     try {
-      System.out.println("Welcome to TicTacToe");
       serverPlayerName = Prompt.input("플레이어 :");
       serverPlayer = userDao.findByName(serverPlayerName);
 

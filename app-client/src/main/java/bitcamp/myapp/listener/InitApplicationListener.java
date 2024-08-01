@@ -22,5 +22,8 @@ public class InitApplicationListener implements ApplicationListener {
 
     userDao = new UserDaoStub(in, out, "users");
     historyDao = new HistoryDaoStub(in, out, "histories");
+
+    ctx.setAttribute("userDao", userDao);
+    ctx.setAttribute("historyDao", historyDao);
   }
 }
