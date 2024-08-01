@@ -2,6 +2,7 @@ package bitcamp.myapp;
 
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
+import bitcamp.listener.StartApplicationListener;
 import bitcamp.myapp.listener.InitApplicationListener;
 import bitcamp.myapp.vo.History;
 import bitcamp.myapp.vo.User;
@@ -31,6 +32,7 @@ public class ClientApp {
     ClientApp app = new ClientApp();
 
     // 애플리케이션이 시작되거나 종료될 때 알림 받을 객체의 연락처를 등록한다.
+    app.addApplicationListener(new StartApplicationListener());
     app.addApplicationListener(new InitApplicationListener());
 
     app.execute();

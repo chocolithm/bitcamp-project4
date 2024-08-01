@@ -1,5 +1,6 @@
 package bitcamp.myapp;
 
+import bitcamp.listener.StartApplicationListener;
 import bitcamp.myapp.command.GameCommand;
 import bitcamp.context.ApplicationContext;
 import bitcamp.listener.ApplicationListener;
@@ -43,6 +44,8 @@ public class ServerApp {
   public static void main(String[] args) {
     ServerApp app = new ServerApp();
 
+
+    app.addApplicationListener(new StartApplicationListener());
     app.addApplicationListener(new InitApplicationListener());
 
     app.execute();
