@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static bitcamp.net.ResponseStatus.CLIENT_TURN;
+import static bitcamp.net.ResponseStatus.SERVER_TURN;
+
 public class ServerApp {
 
   List<ApplicationListener> listeners = new ArrayList<>();
@@ -29,6 +32,13 @@ public class ServerApp {
   private String clientPlayerName;
   private User serverPlayer;
   private User clientPlayer;
+  private UserDao userDao;
+  private HistoryDao historyDao;
+
+  int turn = CLIENT_TURN;
+  String player;
+  String op;
+  String result;
 
   public static void main(String[] args) {
     ServerApp app = new ServerApp();
@@ -57,9 +67,8 @@ public class ServerApp {
       }
     }
 
-    // 서버에서 사용할 Dao Skeloton 객체를 준비한다.
-    UserDao userDao = (UserDao) ctx.getAttribute("userDao");
-    HistoryDao historyDao = (HistoryDao) ctx.getAttribute("historyDao");
+    userDao = (UserDao) ctx.getAttribute("userDao");
+    historyDao = (HistoryDao) ctx.getAttribute("historyDao");
 
 
     // 서버 플레이어 이름 등록
@@ -91,6 +100,7 @@ public class ServerApp {
       out = new ObjectOutputStream(socket.getOutputStream());
       in = new ObjectInputStream(socket.getInputStream());
 
+      // 클라이언트 플레이어 이름 등록
       clientPlayerName = in.readUTF();
       clientPlayer = userDao.findByName(clientPlayerName);
       if(clientPlayer == null) {
@@ -101,9 +111,10 @@ public class ServerApp {
       ctx.setAttribute("out", out);
       ctx.setAttribute("in", in);
 
+      // 게임 시작
       Thread requestThread;
       while (true) {
-        requestThread = new RequestHandler(userDao, historyDao);
+        requestThread = new RequestHandler();
         requestThread.start();
         requestThread.join();
 
@@ -119,6 +130,7 @@ public class ServerApp {
 
         if (command.equals("1")) {
           GameCommand.start();
+          turn = CLIENT_TURN;
           continue;
         }
 
@@ -148,14 +160,6 @@ public class ServerApp {
 
   class RequestHandler extends Thread {
 
-    private UserDao userDao;
-    private HistoryDao historyDao;
-
-    public RequestHandler(UserDao userDao, HistoryDao historyDao) {
-      this.userDao = userDao;
-      this.historyDao = historyDao;
-    }
-
     @Override
     public void run() {
       try {
@@ -163,53 +167,25 @@ public class ServerApp {
         System.out.println("게임 시작!");
         Thread.sleep(1000);
 
-        String player;
-        String message;
-        int clientMove;
-        int turn = 1;
         while (true) {
 
-          System.out.println(GameCommand.getMap());
-          out.writeUTF(GameCommand.getMap());
-          out.flush();
+          printMap();
 
-          if (turn == 1) {
-            turn = 2;
-
-            System.out.println("상대방 입력 대기 중...");
-
-            while (true) {
-              clientMove = in.readInt();
-              message = GameCommand.validate(clientMove);
-              if(message.equals("OK")) {
-                out.writeUTF(message);
-                out.flush();
-                GameCommand.set(clientMove);
-                break;
-              } else {
-                out.writeUTF(message);
-                out.flush();
-              }
-            }
-
-            player = GameCommand.check(clientPlayerName);
-            if(Objects.equals(player, clientPlayerName)) {
-              setWinLose(clientPlayer, serverPlayer);
-              break;
-            }
-
+          if (turn == CLIENT_TURN) {
+            clientTurn();
           } else {
-            turn = 1;
-
-            GameCommand.move("x");
-            player = GameCommand.check(serverPlayerName);
-            if(Objects.equals(player, serverPlayerName)) {
-              setWinLose(serverPlayer, clientPlayer);
-              break;
-            }
+            serverTurn();
           }
 
-          if (Objects.equals(player, "draw")) {
+          result = GameCommand.check();
+          if(Objects.equals(result, "game over")) {
+            User winner = userDao.findByName(player);
+            User loser = userDao.findByName(op);
+            setWinLose(winner, loser);
+            break;
+          }
+
+          if(Objects.equals(result, "draw")) {
             setDraw();
             break;
           }
@@ -218,24 +194,47 @@ public class ServerApp {
           out.flush();
         }
 
-        out.writeUTF("game over");
-        out.writeUTF(GameCommand.getMap());
-        out.writeUTF(player);
-        out.writeObject(clientPlayer);
-        out.flush();
-        System.out.println(GameCommand.getMap());
-        if(Objects.equals(player, "draw")) {
-          System.out.println("무승부입니다.");
-        } else {
-          System.out.printf("승자 : %s\n", player);
-        }
-        System.out.printf("내 전적 : %d승 %d무 %d패\n", serverPlayer.getWin(), serverPlayer.getDraw(), serverPlayer.getLose());
-        System.out.println("게임 오버");
+        gameOver();
 
       } catch (Exception e) {
         System.out.println("클라이언트 요청 처리 중 오류 발생!");
         e.printStackTrace();
       }
+    }
+
+    private void printMap() throws Exception {
+      System.out.println(GameCommand.getMap());
+      out.writeUTF(GameCommand.getMap());
+      out.flush();
+    }
+
+    private void clientTurn() throws Exception {
+      turn = SERVER_TURN;
+      player = clientPlayerName;
+      op = serverPlayerName;
+      System.out.println("상대방 입력 대기 중...");
+
+      while (true) {
+        int clientMove = in.readInt();
+        String message = GameCommand.validate(clientMove);
+        if(message.equals("OK")) {
+          out.writeUTF(message);
+          out.flush();
+          GameCommand.set(clientMove);
+          break;
+        } else {
+          out.writeUTF(message);
+          out.flush();
+        }
+      }
+    }
+
+    private void serverTurn() {
+      turn = CLIENT_TURN;
+      player = serverPlayerName;
+      op = clientPlayerName;
+
+      GameCommand.move("x");
     }
 
     private void setWinLose(User winner, User loser) {
@@ -268,6 +267,24 @@ public class ServerApp {
         System.out.println("전적 처리 중 오류 발생");
         e.printStackTrace();
       }
+    }
+
+    private void gameOver() throws Exception {
+      out.writeUTF("game over");
+      printMap();
+      out.writeUTF(result);
+      out.writeUTF(player);
+      out.writeObject(clientPlayer);
+      out.flush();
+
+      if(Objects.equals(result, "draw")) {
+        System.out.println("무승부입니다.");
+      } else {
+        System.out.printf("승자 : %s\n", player);
+      }
+
+      System.out.printf("내 전적 : %d승 %d무 %d패\n", serverPlayer.getWin(), serverPlayer.getDraw(), serverPlayer.getLose());
+      System.out.println("게임 오버");
     }
   }
 }
