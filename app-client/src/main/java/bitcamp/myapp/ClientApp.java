@@ -77,6 +77,9 @@ public class ClientApp {
       out.writeUTF(clientPlayerName);
       out.flush();
 
+      // Rock-Paper-Scissors to decide the starting player
+      playRPS();
+
       // 게임 실행
       while (true) {
 
@@ -141,6 +144,36 @@ public class ClientApp {
       }
     }
   }
+
+  private void playRPS() throws Exception {
+    System.out.println("가위, 바위, 보 게임을 시작합니다.");
+    String clientMove;
+    String serverMove;
+
+    while (true) {
+      clientMove = Prompt.input("가위, 바위, 보 중 하나를 입력하세요: ");
+      out.writeUTF(clientMove);
+      out.flush();
+
+      serverMove = in.readUTF();
+      System.out.println("서버의 선택: " + serverMove);
+
+      if (clientMove.equals(serverMove)) {
+        System.out.println("비겼습니다. 다시 시도하세요.");
+      } else if ((clientMove.equals("가위") && serverMove.equals("보")) ||
+          (clientMove.equals("바위") && serverMove.equals("가위")) ||
+          (clientMove.equals("보") && serverMove.equals("바위"))) {
+        System.out.println("당신이 이겼습니다. 당신이 먼저 시작합니다.");
+        turn = CLIENT_TURN;
+        break;
+      } else {
+        System.out.println("당신이 졌습니다. 서버가 먼저 시작합니다.");
+        turn = SERVER_TURN;
+        break;
+      }
+    }
+  }
+
 
   private void printMap() throws Exception {
     System.out.println(in.readUTF());

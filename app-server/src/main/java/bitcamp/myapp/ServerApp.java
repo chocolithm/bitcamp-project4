@@ -44,7 +44,6 @@ public class ServerApp {
   public static void main(String[] args) {
     ServerApp app = new ServerApp();
 
-
     app.addApplicationListener(new StartApplicationListener());
     app.addApplicationListener(new InitApplicationListener());
 
@@ -112,6 +111,9 @@ public class ServerApp {
       ctx.setAttribute("out", out);
       ctx.setAttribute("in", in);
 
+      // Rock-Paper-Scissors to decide the starting player
+      playRPS();
+
       // 게임 시작
       Thread requestThread;
       while (true) {
@@ -161,6 +163,36 @@ public class ServerApp {
       }
     }
   }
+
+  private void playRPS() throws Exception {
+    System.out.println("가위, 바위, 보 게임을 시작합니다.");
+    String clientMove;
+    String serverMove;
+
+    while (true) {
+      serverMove = Prompt.input("가위, 바위, 보 중 하나를 입력하세요: ");
+      out.writeUTF(serverMove);
+      out.flush();
+
+      clientMove = in.readUTF();
+      System.out.println("클라이언트의 선택: " + clientMove);
+
+      if (clientMove.equals(serverMove)) {
+        System.out.println("비겼습니다. 다시 시도하세요.");
+      } else if ((clientMove.equals("가위") && serverMove.equals("보")) ||
+          (clientMove.equals("바위") && serverMove.equals("가위")) ||
+          (clientMove.equals("보") && serverMove.equals("바위"))) {
+        System.out.println("클라이언트가 이겼습니다. 클라이언트가 먼저 시작합니다.");
+        turn = CLIENT_TURN;
+        break;
+      } else {
+        System.out.println("서버가 이겼습니다. 서버가 먼저 시작합니다.");
+        turn = SERVER_TURN;
+        break;
+      }
+    }
+  }
+
 
   class RequestHandler extends Thread {
 
@@ -292,4 +324,3 @@ public class ServerApp {
     }
   }
 }
-
