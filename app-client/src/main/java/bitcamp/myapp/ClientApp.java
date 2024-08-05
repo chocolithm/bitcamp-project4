@@ -15,6 +15,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -116,8 +117,7 @@ public class ClientApp {
 
         if (command.equals("1")) {
           out.reset();
-          turn = CLIENT_TURN;
-          System.out.println("게임을 다시 시작합니다.");
+          playRPS();
           continue;
         }
 
@@ -149,6 +149,7 @@ public class ClientApp {
     System.out.println("가위, 바위, 보 게임을 시작합니다.");
     String clientMove;
     String serverMove;
+    List<String> options = Arrays.stream(new String[] {"가위", "바위", "보"}).toList();
 
     while (true) {
       clientMove = Prompt.input("가위, 바위, 보 중 하나를 입력하세요: ");
@@ -158,7 +159,9 @@ public class ClientApp {
       serverMove = in.readUTF();
       System.out.println("서버의 선택: " + serverMove);
 
-      if (clientMove.equals(serverMove)) {
+      if (!options.contains(clientMove) || !options.contains(serverMove)) {
+        System.out.println("잘못된 선택지입니다.");
+      } else if (clientMove.equals(serverMove)) {
         System.out.println("비겼습니다. 다시 시도하세요.");
       } else if ((clientMove.equals("가위") && serverMove.equals("보")) ||
           (clientMove.equals("바위") && serverMove.equals("가위")) ||
@@ -232,13 +235,13 @@ public class ClientApp {
 
     String result;
     for (History history : list) {
-      if(history.getWinner().equals(playerName)) {
+      if (history.getWinner().equals(playerName)) {
         result = Ansi.BLUE + "승" + Ansi.RESET;
       } else {
         result = Ansi.RED + "패" + Ansi.RESET;
       }
 
-      if(history.getWinner().equals("draw")) {
+      if (history.getWinner().equals("draw")) {
         result = "무";
       }
 

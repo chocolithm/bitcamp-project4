@@ -16,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -136,7 +137,7 @@ public class ServerApp {
         if (command.equals("1")) {
           out.reset();
           GameCommand.start();
-          turn = CLIENT_TURN;
+          playRPS();
           continue;
         }
 
@@ -168,6 +169,7 @@ public class ServerApp {
     System.out.println("가위, 바위, 보 게임을 시작합니다.");
     String clientMove;
     String serverMove;
+    List<String> options = Arrays.stream(new String[] {"가위", "바위", "보"}).toList();
 
     while (true) {
       serverMove = Prompt.input("가위, 바위, 보 중 하나를 입력하세요: ");
@@ -177,7 +179,9 @@ public class ServerApp {
       clientMove = in.readUTF();
       System.out.println("클라이언트의 선택: " + clientMove);
 
-      if (clientMove.equals(serverMove)) {
+      if (!options.contains(clientMove) || !options.contains(serverMove)) {
+        System.out.println("잘못된 선택지입니다.");
+      } else if (clientMove.equals(serverMove)) {
         System.out.println("비겼습니다. 다시 시도하세요.");
       } else if ((clientMove.equals("가위") && serverMove.equals("보")) ||
           (clientMove.equals("바위") && serverMove.equals("가위")) ||
@@ -321,6 +325,7 @@ public class ServerApp {
 
       System.out.printf("내 전적 : %d승 %d무 %d패\n", serverPlayer.getWin(), serverPlayer.getDraw(), serverPlayer.getLose());
       System.out.println("게임 오버");
+      System.out.println("클라이언트 선택 대기 중 ...");
     }
   }
 }
