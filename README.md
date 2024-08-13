@@ -214,7 +214,12 @@ $ gradle run
 - 입력한 값이 유효하지 않거나 이미 채워진 칸이라면 경고 출력 후 번호를 다시 선택합니다.
 - 입력한 값이 유효하다면 상대방에게 턴이 넘어갑니다.
 
+[서버]
+
 <img src="README_images/server_play.png" alt="서버 게임화면">
+
+[클라이언트]
+
 <img src="README_images/client_play.png" alt="클라이언트 게임화면">
 
 ### 게임종료
@@ -222,7 +227,12 @@ $ gradle run
 - 게임판이 모두 채워질 때까지 승자가 나오지 않으면 무승부를 선언합니다.
 - 승자나 무승부가 선언되면 개인 전적과 게임 종료 메뉴를 출력합니다.
 
+[게임 종료]
+
 <img src="README_images/gameover.png" alt="게임종료">
+
+[무승부]
+
 <img src="README_images/draw.png" alt="무승부">
 
 ### 게임 종료 메뉴
